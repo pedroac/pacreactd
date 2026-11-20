@@ -1,0 +1,52 @@
+.TH PACREACTD 1 "2026-11-20" "pacreactd" "User Commands"
+.SH NAME
+pacreactd \- watches the system and tells pacreact, pacbar and other programs what changed
+.SH SYNOPSIS
+.B pacreactd
+.br
+.B pacreactd watch
+.RI [ prefix ...]
+.br
+.B pacreactd get
+.I key
+.br
+.B pacreactd print
+.br
+.B pacreactd \-\-version
+.SH DESCRIPTION
+Without arguments it runs as the daemon: it watches the battery and the charger, memory, CPU and I/O pressure, the temperature, the
+network (and the wifi signal, from NetworkManager or iwd), the sound server and the audio jacks, the webcam, USB devices, printing (CUPS), the screen's brightness, disk space,
+Bluetooth, the lock keys and, if asked, the latency of a host, and keeps what it knows as a table of keys and values. Programs
+connect to its socket, are told the state, and then every change; it sleeps between them.
+.PP
+It has no screen and decides nothing about what is worth showing. The protocol, and every key, are in
+.IR /usr/share/doc/pacreactd/protocol.md .
+.SH COMMANDS
+.TP
+.BI "watch [" prefix ...]
+Print the state, then each change, one per line, until interrupted. With prefixes, only the keys under them (\fBnet\fR is
+\fBnet\fR and \fBnet.*\fR).
+.TP
+.BI get " key"
+Print the value of one key (its attributes, if any, after a tab). Exits 1 if there is no such key.
+.TP
+.B print
+Print the print jobs that have not finished, one per line: id, state, queue and name. Asks CUPS when run; the daemon need not run.
+.SH FILES
+.TP
+.I /etc/pac/pacreactd.conf, ~/.config/pac/pacreactd.conf, ./pacreactd.conf
+Settings, each overriding the earlier. The example is documented and installed in
+.IR /usr/share/doc/pacreactd/pacreactd.conf .
+.TP
+.I $XDG_RUNTIME_DIR/pacreactd.sock
+The socket (a SOCK_SEQPACKET Unix socket, mode 0600).
+.SH SYSTEMD
+.B systemctl --user enable --now pacreactd.socket
+starts the daemon when something first connects. Or enable
+.B pacreactd.service
+to run it with the session. Under systemd the socket exists before the daemon, and is not removed when it exits.
+.SH SECURITY
+Only processes of the same user may connect. What devices, documents and people call themselves is cleaned before it is
+said, and can never be taken for anything but a name. See the protocol document.
+.SH SEE ALSO
+.BR pacreact (1)

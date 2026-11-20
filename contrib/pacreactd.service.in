@@ -1,0 +1,23 @@
+[Unit]
+Description=pacreactd: watches the system and tells pacreact, pacbar and others
+Documentation=man:pacreactd(1)
+# Started by its socket when something connects, or at once with the session if the service itself is enabled.
+Requires=pacreactd.socket
+After=pacreactd.socket
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=@BINDIR@/pacreactd
+Restart=on-failure
+RestartSec=2
+# It reads the system and writes nothing: no new privileges, no realtime, only the kinds of socket it uses (local, netlink for
+# the network and the kernel's uevents, IP for the ping of the opt-in probe).
+NoNewPrivileges=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictAddressFamilies=AF_UNIX AF_NETLINK AF_INET AF_INET6
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=graphical-session.target

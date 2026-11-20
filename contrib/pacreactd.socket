@@ -1,0 +1,10 @@
+[Unit]
+Description=pacreactd: the socket that pacreact, pacbar and others connect to
+
+[Socket]
+ListenSequentialPacket=%t/pacreactd.sock
+SocketMode=0600
+# Connecting starts the daemon, so nothing has to be started before what listens to it.
+
+[Install]
+WantedBy=sockets.target

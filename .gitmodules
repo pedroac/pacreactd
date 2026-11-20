@@ -1,0 +1,3 @@
+[submodule "pacommon"]
+	path = pacommon
+	url = git@github.com:pedroac/pacommon.git

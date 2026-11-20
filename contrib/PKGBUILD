@@ -1,0 +1,63 @@
+# Maintainer: Pedro Amaral Couto
+#
+# Builds pacreactd from the checkout this file lives in (contrib/PKGBUILD), including
+# uncommitted changes, so it works before there is a release to download:
+#
+#     cd contrib && makepkg -si
+#
+# Then, for the daemon to start when something connects to it:
+#
+#     systemctl --user enable --now pacreactd.socket
+#
+pkgname=pacreactd-git
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Watches the system and tells pacreact, pacbar and others what changed'
+arch=(x86_64 aarch64)
+license=(MIT)
+depends=(systemd-libs)
+makedepends=(pkgconf git)
+optdepends=(
+    'pipewire-pulse: the volume and microphone (any PulseAudio-compatible server works)'
+    'cups: printing'
+    'bluez: Bluetooth devices connecting'
+)
+provides=(pacreactd)
+conflicts=(pacreactd)
+
+_root() { cd "$startdir/.." && pwd; }
+
+pkgver() {
+    cd "$(_root)"
+    local count commit
+    if count=$(git rev-list --count HEAD 2>/dev/null) && commit=$(git rev-parse --short HEAD 2>/dev/null); then
+        printf '0.1.0.r%s.%s' "$count" "$commit"
+    else
+        printf '0.1.0'
+    fi
+}
+
+prepare() {
+    # Copy the tree (tracked and untracked files, minus what .gitignore excludes, and the pacommon
+    # submodule's files with it) so the build never writes into the checkout.
+    mkdir -p "$srcdir/$pkgname"
+    cd "$(_root)"
+    git ls-files -z --cached --others --exclude-standard | tar --null -T - -cf - |
+        tar -xf - -C "$srcdir/$pkgname"
+}
+
+build() {
+    cd "$srcdir/$pkgname"
+    make PREFIX=/usr
+}
+
+check() {
+    cd "$srcdir/$pkgname"
+    make PREFIX=/usr test
+}
+
+package() {
+    cd "$srcdir/$pkgname"
+    make PREFIX=/usr DESTDIR="$pkgdir" install
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
